@@ -172,10 +172,32 @@ def makegraph(data):
       edge_list.append((attrbyid[id1].vertexid, attrbyid[id2].vertexid))
       network.add_edges(edge_list)
       network.es[edgeid]["weight"] = sim[(id1,id2)]
+      print edgeid
+      print network.es[edgeid]
   for id1 in attrbyid.keys():
     network.vs[attrbyid[id1].vertexid]["info"] = attrbyid[id1]
 
   return network
+
+def print_to_spark_file(graph, filename):
+  # write  file for use by spark...need a distance metric between all pairs of
+  # congressmen...which will be 1 - cosine_sim, or 1 if there is no edge
+  # for now just use vertex id as the mapping...we can change later
+  
+  f=open(filename, 'w')
+  for i in graph.es:
+    print i
+  for i in range(0, len(graph.vs)-1):
+    for j in range(i+1, len(graph.vs)):
+      edge=graph.get_eid(i,j,error=False)
+      weight=0
+      if edge != -1:
+        print edge
+        print graph.es[edge]
+        weight=graph.es[edge]["weight"]
+# need to flip from a similarity to a distance
+      weight = 1 - weight
+      f.write("%d %d %f\n" % (i,j,weight))
 
 if __name__ == "__main__":
   somedata = housedata(1)+housedata(2)+housedata(3)+housedata(4)
@@ -183,5 +205,5 @@ if __name__ == "__main__":
 
   somemoredata = senatedata(113)
   anothergraph = makegraph(somemoredata)
-   
 
+  print_to_spark_file(agraph, "house_data.txt")
