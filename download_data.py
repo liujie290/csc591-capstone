@@ -168,8 +168,9 @@ def makegraph(data):
   edgeid = 0
   for id1,id2 in sim.keys():
     if sim[id1,id2] != None and 0 < sim[id1,id2]:
-      vid1,vid2 = (attrbyid[id1].vertexid, attrbyid[id2].vertexid)
-      network.add_edges((vid1, vid2))
+      edge_list = []
+      edge_list.append((attrbyid[id1].vertexid, attrbyid[id2].vertexid))
+      network.add_edges(edge_list)
       network.es[edgeid]["weight"] = sim[(id1,id2)]
   for id1 in attrbyid.keys():
     network.vs[attrbyid[id1].vertexid]["info"] = attrbyid[id1]
