@@ -184,15 +184,11 @@ def print_to_spark_file(graph, filename):
   # for now just use vertex id as the mapping...we can change later
   
   f=open(filename, 'w')
-  for i in graph.es:
-    print i
   for i in range(0, len(graph.vs)-1):
     for j in range(i+1, len(graph.vs)):
       edge=graph.get_eid(i,j,error=False)
       weight=0
       if edge != -1:
-        print edge
-        print graph.es[edge]
         weight=graph.es[edge]["weight"]
 # need to flip from a similarity to a distance
       weight = 1 - weight
