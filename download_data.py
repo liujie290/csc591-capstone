@@ -172,6 +172,7 @@ def makegraph(data):
       edge_list.append((attrbyid[id1].vertexid, attrbyid[id2].vertexid))
       network.add_edges(edge_list)
       network.es[edgeid]["weight"] = sim[(id1,id2)]
+      edgeid+=1
   for id1 in attrbyid.keys():
     network.vs[attrbyid[id1].vertexid]["info"] = attrbyid[id1]
 
