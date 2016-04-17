@@ -75,16 +75,23 @@ def senatedata(congressnum
   data = getdata(url)
   return data
 
-def makegraph(data):
+def makegraph(data, allownegweights=False):
   """
   Usage: makegraph(data) where data is from housedata(N), senatedata(N), or
-         combined data (e.g., housedata(N)+housedata(N-1)+...).
+         combined data (e.g., housedata(N)+housedata(N-1)+...). It can
+         optionally be passed makegraph(data, allownegweights=True), in 
+         which case it will produce a graph that has both positive weights
+         for people that vote together and negative weights for people that
+         vote in an opposite fashion. 
   Returns: An igraph graph. Edge attributes include the cosine similarity 
            between two congressmen if the two ever voted on the same issue.
            The cosine similariy is stored in the "weight" attribute of the 
            edge. If the two never voted on the same issue, there will be no
-           edge between them. Each vertex has an "info" attribute that has
-           attribute information that can be accessed with, e.g.,
+           edge between them. Additionally, if allownegweights is given its 
+           default value of False, there will only be edges if the two vote
+           the same way more than half the time. Each vertex has an "info" 
+           attribute that has attribute information that can be accessed with, 
+           e.g.,
                 graph.vs[0]["info"].party
            Attribute information includes 
                 id - The ICPSR ID Number for the represenative or senator
@@ -119,7 +126,7 @@ def makegraph(data):
       self.state = set([rec[2]])
       self.district = set([rec[3]])
       self.statename = set([rec[4]])
-      self.party = set([rec[5]])
+      self.party = list([rec[5]])
       self.occupancy = set([rec[6]])
       self.howattained = set([rec[7]])
       self.name = set([rec[8]])
@@ -128,7 +135,7 @@ def makegraph(data):
       self.state = self.state.union([rec[2]])
       self.district = self.district.union([rec[3]])
       self.statename = self.statename.union([rec[4]])
-      self.party = self.party.union([rec[5]])
+      self.party = self.party+list([rec[5]])
       self.occupancy = self.occupancy.union([rec[6]])
       self.howattained = self.howattained.union([rec[7]])
       self.name = self.name.union([rec[8]])
@@ -167,7 +174,7 @@ def makegraph(data):
   network.add_vertices(len(attrbyid.keys()))
   edgeid = 0
   for id1,id2 in sim.keys():
-    if sim[id1,id2] != None and 0 < sim[id1,id2]:
+    if sim[id1,id2] != None and (allownegweights or 0 < sim[id1,id2]):
       edge_list = []
       edge_list.append((attrbyid[id1].vertexid, attrbyid[id2].vertexid))
       network.add_edges(edge_list)
