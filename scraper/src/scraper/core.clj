@@ -134,7 +134,7 @@
   (let [bill-results (get-bill-results congress-num bill)]
     (get-bill-details (first bill-results))))
 
-(def ignore-words ["QUORUM" "JOURNAL" "ADJOURN"])
+(def ignore-words ["QUORUM" "JOURNAL" "ADJOURN" "MOTION"])
 
 (defn in? 
   "true if coll contains elm"
