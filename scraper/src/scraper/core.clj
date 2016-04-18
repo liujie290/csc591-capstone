@@ -42,7 +42,7 @@
 
 (defn get-bill-results
   "Crawls gov site to get text of bill"
-  [congress-num, {:keys [session bill]}]
+  [congress-num, bill]
   (let [query (query-congress congress-num bill)
         result (:body (client/get search-url {:query-params query}))
         html-res (html/html-resource (java.io.StringReader. result))]
@@ -56,8 +56,22 @@
 
 (defn parse-summary
   [html-res]
-  (->> (html/select html-res [:div#bill-summary])
-       (map html/text)))
+  (->> (html/select html-res #{[:#main :> :div.generated-html-container]})
+       (map html/text)
+       (map #(str/replace % #"[\t\n]" ""))
+       (map #(str/replace % #"\s+" " "))
+       (map #(str/replace % #"[^0-9a-zA-Z\s]+" ""))))
+
+(defn follow-text-link
+  [html-res]
+  (->> (html/select html-res
+                    #{[:#content :> :div.tabs_container.bill-only
+                       :> :ul :> [:li (html/nth-of-type 2)] :> :h2 :> :a]})
+       (map #(get-in % [:attrs :href]))
+       (map #(client/get %))
+       (map :body)
+       (map #(html/html-resource (java.io.StringReader. %)))
+       first))
 
 (defn tail
   [[head & tail]]
@@ -89,11 +103,50 @@
 (defn get-bill-details
   [bill-result]
   (let [result (:body (client/get (get-in bill-result [:bill :url])))
-        html-res (html/html-resource (java.io.StringReader. result))]
+        html-res (html/html-resource (java.io.StringReader. result))
+        html-summary (follow-text-link html-res)]
+    (print html-summary)
     (-> bill-result
-        (assoc-in [:bill :summary] (parse-summary html-res))
+        (assoc-in [:bill :summary] (parse-summary html-summary))
         (assoc-in [:bill :current-status] (parse-current-status html-res)))))
 
+(defn get-bill
+  [congress-num bill]
+  (let [bill-results (get-bill-results congress-num bill)]
+    (get-bill-details (first bill-results))))
+
+(def ignore-words ["QUORUM" "JOURNAL" "ADJOURN"])
+
+(defn in? 
+  "true if coll contains elm"
+  [coll elm]  
+  (some #(= elm %) coll))
+
+(defn map-to-bills
+  [congress-info]
+  (->> congress-info
+       (map :bill)
+       (filter #((comp not in?) ignore-words %))
+       (filter #((comp not =) "" %))
+       (set)))
+
+(defn save-bill-to-path
+  [path congress-num bill-name]
+  (if-not (nil? bill-name)
+    (let [bill (get-bill congress-num bill-name)]
+      (spit (str path "/" bill-name ".json") bill))))
+
+(defn load-data
+  [congress-num path]
+  (let [congress-info (fetch-house-info congress-num)
+        bills (map-to-bills congress-info)
+        full-path (str path "/" congress-num "/")]
+    (io/make-parents full-path)
+    (loop [[bill & tail] bills]
+      (save-bill-to-path full-path congress-num bill)
+      (if-not (nil? bill)
+        (recur tail))
+      )))
 
 (defn -main
   "I don't do a whole lot ... yet."
