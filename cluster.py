@@ -3,99 +3,93 @@ from operator import *
 import random
 from pyspark.mllib.recommendation import *
 import re
+from functools import partial
+from pyspark import SparkConf, SparkContext
 
+sc=SparkContext()
 #input data has u,v,distance
 #input_data = sc.textFile("house_data.txt").map(graphparser).map(lambda x:(x[0],x[1],x[2]))
 
+print "loading graph data from file"
 # distnace local is 2d array holding (end_node, distance) for all pairs of nodes
 distance_local=[]
-with "house_data.txt" as f:
-  vertex_count=(int)f.readline().split()
-  for i in range(vertex_count):
-      distance_local.append([])
-      for j in range(vertex_count):
-      distance_local[i].append((0,0))
-  for line in f:
-      splitted=line.split()
-      distance_local[int(splitted[0])][int(splitted[1])]=(int(splitted[1]),float(splitted[2]))
-      distance_local[int(splitted[1])][int(splitted[0])]=(int(splitted[0]),float(splitted[2]))
-
-#distance_rdd holds one RDD for the distnace vector emanating at a given node
-#it gets initialized to the distances in the graph
-distance_rdd=[]
+f=open("house_data.txt",'r')
+vertex_count=int(f.readline())
 for i in range(vertex_count):
-    distance_rdd.append(sc.parallelize(distance_local[i]))
+  distance_local.append([])
+  for j in range(vertex_count):
+      distance_local[i].append((j,0))
+for line in f:
+  splitted=line.split()
+  distance_local[int(splitted[0])][int(splitted[1])]=(int(splitted[1]),float(splitted[2]))
+  distance_local[int(splitted[1])][int(splitted[0])]=(int(splitted[0]),float(splitted[2]))
 
-'''
-def new_best(point):
-  if point[0] > distance_local[i][j] + distance_local[j][point[1]]:
-      return (distance_local[i][j] + distance_local[j][point[1]], point[1]);
-  else
-      return point
+print "broadcasting distances for all workers"
+# need to export our entire distance matrix...as we'll need it on the workers when we're calculating
+# the new distances
+distance=sc.broadcast(distance_local)
 
-
-for j in range(len(distance_local)):
-  for i in range(len(distance_local)):
-    if i == j continue;
-#broadcast the new distances
-    d_ij=distance_rdd[i].collect()[j][0]
-    distnce_rdd[i]=distance_rdd[i].map(new_best)
-
-
-'''
-  
 #randomly choose two medians. map each node to the element it's closest to
-mediods=random.sample(vertex_count,2)
-vertices=scc.parallelize(range(vertex_count))
+#medioids is just a list of vertices
+local_medioids=random.sample(range(vertex_count),2)
+
+print "Choosing initial medioids",local_medioids
+while True:
+#create a list of all vertices in the graph.
+    vertices=sc.parallelize(range(vertex_count))
+#broadcast our list of medioids. needed for finding the closest
+#one in parallel
+    medioids=sc.broadcast(local_medioids)
+
 
 # returns the tuple of group index and vertex that was grouped
-def closest(vertex):
-  int index
-  int min=100
-  for i range len(mediods):
-      if (distance_local[vertex][mediods[i]] < min):
-        index = i
-        min=distance_local[vertex][mediods[i]]
-  return (i, vertex)
+# We could parallelize this part maybe...but that would require
+# a reduce function inside a map function...and I have no
+# idea how you would even do that....maybe create
+# the tuples first and then reduce by key? oh well...this
+# is linear in K, so who cares...k is small
+    def closest(vertex):
+      index=-1
+      min=100
+      for i in range(len(medioids)):
+          if (distance[vertex][medioids[i]] < min):
+            index = i
+            min=distance[vertex][medioids[i]]
+      return (i, vertex)
 
-#groups returs an RDD that's a list of (group,vertex)tuples
-groups=vertices.map(closest)
-#this grabs a mapping of group to all vertices in the group (which we'll need in the next step
-local_groups=groups.groupByKey().mapValues(list).collect()
-'''
-groups={}
-for i in mediods:
-    groups[i]=[]
-local_mapping=mapping.collect()
-#groups is a dict mapping a mediod to a list of the members of its group
-#we take the mappings that the previous map provided and add the vertices to the appropriate group
-for i in len(local_mapping):
-    groups[local_mapping[i]].append(i)
+#groups returns an RDD that's a list of (group,vertex) tuples
+    groups=vertices.map(closest)
 
-# we parallelize our groups now, and for each one, calculate the minimum mediod
-groups_rdd = sc.parallelize(groups)
-'''
+#this grabs a mapping of group to all vertices in the group (which we'll need in the next step)
+#and then broadcasts it to everyone in the group
+    group_list=groups.groupByKey().mapValues(list).broadcast()
 
 #this function takes an element (group,vertex), and returns the sum of squares of from this node to
 #every other element in the group
-def calc_coherence(element):
-  summ=0
-  for i in local_groups[element[0]]:
-    summ+=distance_local[element[1]][i]
+#returns a set (group, vertex, value)
+    def calc_coherence(element):
+      summ=0
+      for i in group_list[element[0]][1]:
+        summ+=distance_local[element[1]][i]**2
+      return (element[0],(element[1],summ))
 
 #for each group, create its own RDD, map it to the cluster metric for each element, then reduce it to find the minimum
-group_rdds=[]
-for i in local_groups:
-    sc.parallelize(i).flatMapmap(calc_coherence)
+#first map: take each vertex and it's assigned group...calculate the metric if it were the center of the group
+#reduceby key: wil find the entry that produces the most tightly knit group
+#map: converts the entry to a simple list of medioids
+    new_medioids =groups.map(calc_coherence).reduceByKey(lambda a,b:a if a[1][1] < b[1][1] else b).map(lambda x:x[1][0]).collect()
 
-#changes each group into a list of 
-best_distances=groups.map(distance_per_element)
-for i in 
+    new_medioids.sort()
+    same=True
+    for i in len(new_medioids):
+      if medioids[i] != new_medioids[i]:
+          same = False
+          break
+    if same:
+       f=open("graph.clusters", 'w')
+       f.write(group_list.collect())
+       break
 
-#group nodes by key
-#create reduce which calculates cost metric of group with a given mediod
-#reduce on min selection of new median
-#repeat until convergeance
 
-#collect groupings, output to file
-#compare against selected party data
+#if we didn't break out of the while loop, set the new medioids, and go to town again!
+    mediods = new_mediods

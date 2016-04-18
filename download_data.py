@@ -191,6 +191,7 @@ def print_to_spark_file(graph, filename):
   # for now just use vertex id as the mapping...we can change later
   
   f=open(filename, 'w')
+  f.write("%d\n"%(len(graph.vs)))
   for i in range(0, len(graph.vs)-1):
     for j in range(i+1, len(graph.vs)):
       edge=graph.get_eid(i,j,error=False)
