@@ -3,6 +3,7 @@ import urllib2
 import numpy as np
 import math
 import igraph
+import sys
 
 def getdata(url):
   """
@@ -189,9 +190,11 @@ def print_to_spark_file(graph, filename):
   # write  file for use by spark...need a distance metric between all pairs of
   # congressmen...which will be 1 - cosine_sim, or 1 if there is no edge
   # for now just use vertex id as the mapping...we can change later
-  
+ 
   f=open(filename, 'w')
   f.write("%d\n"%(len(graph.vs)))
+  for i in range(0,len(graph.vs)):
+      f.write("%d %s\n" % (i,list(graph.vs[i]["info"].name)[0]))
   for i in range(0, len(graph.vs)-1):
     for j in range(i+1, len(graph.vs)):
       edge=graph.get_eid(i,j,error=False)
@@ -203,10 +206,17 @@ def print_to_spark_file(graph, filename):
       f.write("%d %d %f\n" % (i,j,weight))
 
 if __name__ == "__main__":
-  somedata = housedata(1)+housedata(2)+housedata(3)+housedata(4)
-  agraph = makegraph(somedata)
+    #args: (house|senate) <start> <end> <output file>
+    if sys.argv[1] == "house":
+        func=housedata
+    else:
+        func=senatedata
 
-  somemoredata = senatedata(113)
-  anothergraph = makegraph(somemoredata)
+    data=func(int(sys.argv[2]))
+    for i in range(int(sys.argv[2])+1,int(sys.argv[3])+1):
+        data +=func(i)
 
-  print_to_spark_file(agraph, "house_data.txt")
+    agraph = makegraph(data)
+
+
+    print_to_spark_file(agraph, sys.argv[4])
