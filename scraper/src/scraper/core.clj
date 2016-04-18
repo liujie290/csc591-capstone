@@ -62,11 +62,31 @@
        (map #(str/replace % #"\s+" " "))
        (map #(str/replace % #"[^0-9a-zA-Z\s]+" ""))))
 
+(defn parse-summary-text
+  [html-res]
+  (print html-res)
+  (->> (html/select html-res #{[:#billTextContainer]})
+       (map html/text)
+       (map #(str/replace % #"[\t\n]" ""))
+       (map #(str/replace % #"\s+" " "))
+       (map #(str/replace % #"[^0-9a-zA-Z\s]+" ""))))
+
 (defn follow-text-link
   [html-res]
   (->> (html/select html-res
                     #{[:#content :> :div.tabs_container.bill-only
                        :> :ul :> [:li (html/nth-of-type 2)] :> :h2 :> :a]})
+       (map #(get-in % [:attrs :href]))
+       (map #(client/get %))
+       (map :body)
+       (map #(html/html-resource (java.io.StringReader. %)))
+       first))
+
+(defn follow-summary-text-link
+  [html-res]
+  (->> (html/select html-res
+                    #{[:#main :> [:div (html/nth-of-type 3)] :> :ul :> [:li (html/nth-of-type 3)] :> :a]})
+       (print)
        (map #(get-in % [:attrs :href]))
        (map #(client/get %))
        (map :body)
@@ -105,9 +125,8 @@
   (let [result (:body (client/get (get-in bill-result [:bill :url])))
         html-res (html/html-resource (java.io.StringReader. result))
         html-summary (follow-text-link html-res)]
-    (print html-summary)
     (-> bill-result
-        (assoc-in [:bill :summary] (parse-summary html-summary))
+        (assoc-in [:bill :summary] (parse-summary html-summary) )
         (assoc-in [:bill :current-status] (parse-current-status html-res)))))
 
 (defn get-bill
@@ -128,19 +147,21 @@
        (map :bill)
        (filter #((comp not in?) ignore-words %))
        (filter #((comp not =) "" %))
-       (set)))
+       (set)
+       (into [])))
 
 (defn save-bill-to-path
   [path congress-num bill-name]
   (if-not (nil? bill-name)
     (let [bill (get-bill congress-num bill-name)]
+      (println bill-name)
       (spit (str path "/" bill-name ".json") bill))))
 
 (defn load-data
   [congress-num path]
   (let [congress-info (fetch-house-info congress-num)
         bills (map-to-bills congress-info)
-        full-path (str path "/" congress-num "/")]
+        full-path (str path "/" congress-num "/.")]
     (io/make-parents full-path)
     (loop [[bill & tail] bills]
       (save-bill-to-path full-path congress-num bill)
@@ -151,4 +172,5 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (println "Hello, World!"))
+  (let [[congress-num path] args]
+    (load-data congress-num path)))
