@@ -62,7 +62,7 @@ if __name__ == "__main__":
   plt.plot(roll_range, house_modularities, 'yo', label="House")
   plt.ylabel('Modularity')
   plt.xlabel('House/Senate Roll Call')
-  plt.legend()
+  plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=2)
 
   # compute linear trend for senate and add to plot
   z = numpy.polyfit(roll_range, sen_modularities, 1)
