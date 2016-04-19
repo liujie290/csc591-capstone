@@ -14,13 +14,35 @@
   [^Integer congress-num]
   (ftp/with-ftp [client "ftp://anonymous:pwd@voteview.com/dtaord"]
     (let [house-desc (str "h" congress-num "desc.csv")
+          house-desc (if (= congress-num 110) "h110desc_December.csv" house-desc)
+          house-desc (if (= congress-num 109) "h109desc_final.csv" house-desc)
+          house-desc (if (= congress-num 111) "h111desc_final.csv" house-desc)
           stream (ftp/client-get-stream client house-desc)]
       (->> (csv/read-csv
             (io/reader stream))
            mappify
            doall))))
 
+(defn fetch-senate-info
+  "Fetchs house info csv"
+  [^Integer congress-num]
+  (ftp/with-ftp [client "ftp://anonymous:pwd@voteview.com/dtaord"]
+    (let [house-desc (str "s" congress-num "desc.csv")
+          house-desc (if (= congress-num 110) "S110desc_December.csv" house-desc)
+          house-desc (if (= congress-num 109) "S109desc_final.csv" house-desc)
+          house-desc (if (= congress-num 111) "S111desc_2010.csv" house-desc)
+          stream (ftp/client-get-stream client house-desc)]
+      (->> (csv/read-csv
+            (io/reader stream))
+           mappify
+           doall))))
+
+(def url "https://www.congress.gov")
+
 (def search-url "https://www.congress.gov/search")
+
+(defn fetch-url [url]
+  (html/html-resource (java.net.URL. url)))
 
 (defn query-congress
   "build http query for congress"
@@ -54,17 +76,16 @@
   [str]
   (re-seq #"^\s*\[(\w+)\] => (.*)$" str))
 
-(defn parse-summary
+(defn parse-summary-from-first-page
   [html-res]
-  (->> (html/select html-res #{[:#main :> :div.generated-html-container]})
+  (->> (html/select html-res #{[:div#bill-summary]})
        (map html/text)
        (map #(str/replace % #"[\t\n]" ""))
        (map #(str/replace % #"\s+" " "))
        (map #(str/replace % #"[^0-9a-zA-Z\s]+" ""))))
 
-(defn parse-summary-text
+(defn parse-summary
   [html-res]
-  (print html-res)
   (->> (html/select html-res #{[:#billTextContainer]})
        (map html/text)
        (map #(str/replace % #"[\t\n]" ""))
@@ -77,20 +98,16 @@
                     #{[:#content :> :div.tabs_container.bill-only
                        :> :ul :> [:li (html/nth-of-type 2)] :> :h2 :> :a]})
        (map #(get-in % [:attrs :href]))
-       (map #(client/get %))
-       (map :body)
-       (map #(html/html-resource (java.io.StringReader. %)))
+       (map #(fetch-url %))
        first))
 
 (defn follow-summary-text-link
   [html-res]
   (->> (html/select html-res
-                    #{[:#main :> [:div (html/nth-of-type 3)] :> :ul :> [:li (html/nth-of-type 3)] :> :a]})
-       (print)
+                    #{[:#textSelector :> :div.input-group-outside-element
+                       :> :ul :> [:li (html/nth-of-type 3)] :> :a]})
        (map #(get-in % [:attrs :href]))
-       (map #(client/get %))
-       (map :body)
-       (map #(html/html-resource (java.io.StringReader. %)))
+       (map #(fetch-url (str url %)))
        first))
 
 (defn tail
@@ -122,12 +139,12 @@
 
 (defn get-bill-details
   [bill-result]
-  (let [result (:body (client/get (get-in bill-result [:bill :url])))
-        html-res (html/html-resource (java.io.StringReader. result))
-        html-summary (follow-text-link html-res)]
+  (let [html-res (fetch-url (get-in bill-result [:bill :url]))
+        html-summary (parse-summary (follow-summary-text-link (follow-text-link html-res)))
+        current-status (parse-current-status html-res)]
     (-> bill-result
-        (assoc-in [:bill :summary] (parse-summary html-summary) )
-        (assoc-in [:bill :current-status] (parse-current-status html-res)))))
+        (assoc-in [:bill :summary] html-summary)
+        (assoc-in [:bill :current-status] current-status))))
 
 (defn get-bill
   [congress-num bill]
@@ -155,22 +172,27 @@
   (if-not (nil? bill-name)
     (let [bill (get-bill congress-num bill-name)]
       (println bill-name)
-      (spit (str path "/" bill-name ".json") bill))))
+      (spit (str path "/" bill-name ".json") (json/write-str bill)))))
 
 (defn load-data
-  [congress-num path]
-  (let [congress-info (fetch-house-info congress-num)
+  [type congress-num path]
+  (let [congress-info (if (= type "house")
+                        (fetch-house-info congress-num)
+                        (fetch-senate-info congress-num))
         bills (map-to-bills congress-info)
         full-path (str path "/" congress-num "/.")]
     (io/make-parents full-path)
-    (loop [[bill & tail] bills]
-      (save-bill-to-path full-path congress-num bill)
-      (if-not (nil? bill)
-        (recur tail))
-      )))
+    (loop [[bill & tail] bills
+           futures []]
+      (let [work (future (save-bill-to-path full-path congress-num bill))
+            new-futures (conj futures work)]
+        (if-not (nil? bill)
+          (recur tail new-futures)
+          futures)))))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [[congress-num path] args]
-    (load-data congress-num path)))
+  (let [[congress-num path] args
+        futures (load-data congress-num path)]
+    (map deref futures)))
