@@ -47,7 +47,7 @@
 (defn query-congress
   "build http query for congress"
   [congress-num bill]
-  {:q 
+  {:q
    (json/write-str
     {:source "legislation"
      :search bill
@@ -153,9 +153,9 @@
 
 (def ignore-words ["QUORUM" "JOURNAL" "ADJOURN" "MOTION"])
 
-(defn in? 
+(defn in?
   "true if coll contains elm"
-  [coll elm]  
+  [coll elm]
   (some #(= elm %) coll))
 
 (defn map-to-bills
@@ -193,6 +193,6 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (let [[congress-num path] args
-        futures (load-data congress-num path)]
+  (let [[type congress-num path] args
+        futures (load-data type congress-num path)]
     (map deref futures)))
