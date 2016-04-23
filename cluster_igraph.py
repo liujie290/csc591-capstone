@@ -2,9 +2,10 @@ import download_data as dd
 import matplotlib.pyplot as plt
 import igraph
 import numpy
+import collections
 
 # Usage: python cluster_igraph.py (no params)
-# This module gathers all house and senate data from th 101st to 113th
+# This module gathers all house and senate data from the 101st to 113th
 # and calculates clusters from each of them individually. It plots each
 # and compares differences between house and senate
 if __name__ == "__main__":
@@ -21,10 +22,26 @@ if __name__ == "__main__":
       data = dd.senatedata(x)
       graph = dd.makegraph(data)
 
+      # get party info to determine color
+      partymode = [int(collections.Counter(info.party).most_common(1)[0][0]) for info in graph.vs["info"]]
+      graph.vs["party"] = partymode
+
       # fast greedy tended to be the most reasonable cluster
       community = graph.community_fastgreedy().as_clustering()
-      filename = "senate" + str(x) + ".png"
-      igraph.plot(community, filename)
+
+      # get subgraphs to determine colors
+      clusters = community.subgraphs()
+
+      # Assume largest parties ar republican and democrat
+      # last colors are unimportant since only going to 1990, but include in case more clusters are found
+      if (clusters[0].vs[0]["party"] == 100):
+        color_list = ["blue", "red", "yellow", "orange", "green"]
+      else:
+        color_list = ["red", "blue", "yellow", "orange", "green"]
+
+      # write plot to file
+      filename = "cluster_images/senate" + str(x) + ".png"
+      igraph.plot(community, filename, vertex_color=[color_list[x] for x in community.membership])
       
       # keep track of cluster size and modularity
       sen_clusters.append(community.__len__())
@@ -37,17 +54,30 @@ if __name__ == "__main__":
   house_modularities = [];
   house_clusters = [];
 
-  # # for houses 101 - 113
+  # for houses 101 - 113
   for x in roll_range:
       
       data = dd.housedata(x)
       graph = dd.makegraph(data)
 
+      # get party info to determine color
+      partymode = [int(collections.Counter(info.party).most_common(1)[0][0]) for info in graph.vs["info"]]
+      graph.vs["party"] = partymode
+
       # fast greedy tended to be the most reasonable cluster
       community = graph.community_fastgreedy().as_clustering()
-      filename = "house" + str(x) + ".png"
-      igraph.plot(community, filename)
-      
+
+      # Assume largest parties ar republican and democrat
+      # last colors are unimportant since only going to 1990, but include in case more clusters are found
+      if (clusters[0].vs[0]["party"] == 100):
+        color_list = ["blue", "red", "yellow", "orange", "green"]
+      else:
+        color_list = ["red", "blue", "yellow", "orange", "green"]
+
+      # print plot to file
+      filename = "cluster_images/house" + str(x) + ".png"
+      igraph.plot(community, filename, vertex_color=[color_list[x] for x in community.membership])
+
       # keep track of cluster size and modularity
       house_clusters.append(community.__len__())
       house_modularities.append(community.modularity)
@@ -75,7 +105,7 @@ if __name__ == "__main__":
   plt.plot(roll_range,p_2(roll_range),'y--')
 
   # save plot
-  plt.savefig("modularities.png", bbox_inches='tight')
+  plt.savefig("cluster_images/modularities.png", bbox_inches='tight')
 
   # clear plot for new one
   plt.clf()
@@ -94,6 +124,5 @@ if __name__ == "__main__":
   barlist[1].set_color('y')
 
   # save bar graph
-  plt.savefig("modularities_bar.png", bbox_inches='tight')
-
+  plt.savefig("cluster_images/modularities_bar.png", bbox_inches='tight')
 

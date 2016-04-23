@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# In order to do the first part of the analysis to create the data 
+# visualization, one can run this README as a bash script. 
+# 
+# The following files must be in the directory with this script:
+#   download_data.py - This file defines functions used to download the data.
+#   savedata.py - This file downloads congress.pydata and saves it in 
+#                 the current directory so one does not need to download
+#                 the data for each run.
+#   visualization.py - This file saves 101 plots in a subdirectory plots/ in
+#                      the current directory. 
+#                      NOTE: One can edit this file to change the loadgraph
+#                      variable to True or False. If set to False, it will
+#                      load congress.pydata, create a graph of the senate,
+#                      and save it to allsenates.pydata. It will then run
+#                      as usual. Subsequent runs can have loadgraph set to
+#                      True, and the program will then load in the data from
+#                      allsenates.pydata and then run as usual. 
+#   makegif.sh - This file reduces files in plots/ to smaller *.png files 
+#                for further processing. These files are saved in a 
+#                subdirectory named smallerplots/ in the current directory.
+#                It then creates a gif from these smaller plots and saves it
+#                in the current directory as visualization.gif.
+
+# Install Python and pip
+sudo apt-get update
+sudo apt-get install python-dev
+sudo apt-get install python-pip
+# Install packages used by Python
+sudo apt-get install python-igraph
+sudo apt-get install python-numpy
+sudo apt-get install pandoc
+sudo apt-get install python-scipy
+sudo pip install scikit-learn
+sudo pip install nltk
+sudo pip install gensim
+sudo pip install futures
+# Install convert program used to make a GIF from images.
+sudo apt-get install imagemagick
+
+export SPARK_HOME=/afs/unity.ncsu.edu/users/m/matakagi/src/spark-1.5.2-bin-hadoop2.6
+
+# Make directory structure needed for the first analysis that creates a 
+# data visualization.
+mkdir plots
+mkdir smallerplots
+
+
+# Run the first analysis that creates the plots for the visualization.
+python savedata.py         
+python visualization.py
+# Create GIF
+chmod 700 makegif.sh
+./makegif.sh
+
