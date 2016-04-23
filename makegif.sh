@@ -1,4 +1,6 @@
 #!/bin/bash
+# Reduce filesize of png files to make the gif smaller and to speed up processing.
+# Then, use convert to create the gif from the png files.
 
 cwd=plots
 todir=smallerplots
