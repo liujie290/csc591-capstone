@@ -4,7 +4,7 @@ import pickle
 import collections
 
 graphdata = 'allsenates.pydata'
-loadgraph = True # If true, will load the graph. Else, will make and save the
+loadgraph = False # If true, will load the graph. Else, will make and save the
                   # graph before continuing.
 
 if loadgraph:
