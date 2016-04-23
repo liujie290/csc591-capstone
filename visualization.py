@@ -12,6 +12,7 @@ if loadgraph:
   senategraph = igraph.Graph()
   senategraph = senategraph.Read_Pickle(graphdata)
 else:
+  # Read in congress data.
   with open('congress.pydata', 'rb') as data:
     allhouses  = pickle.load(data)
     allsenates = pickle.load(data)
@@ -40,6 +41,12 @@ else:
 
 # Initialize the node colors.
 def initnodecolor(partycode):
+  """
+  This function is used to map a partycode to a color. It initially was written as a function since it took a set of 
+  partycodes. Due to changes in the code, it now only takes a single partycode representing the most common party. As such,
+  it could be written as a dictionary. However, this is not causing any bottlenecks, so the code was't updated to make this
+  a dictionary.
+  """
   if partycode == 100:
     # Democrat
     return "blue"
@@ -74,6 +81,9 @@ edge_width = 2
 vertex_size = 30
 
 def initgraph(graph):
+  """ 
+  This needs to be called on the graph before applying maxweightify. It sets some attributes that will be used for plotting.
+  """
   graph.vs["color"] = [initnodecolor(partycode) for partycode 
                                                 in graph.vs["party"]] 
   graph.vs["shape"] = "circle"
@@ -87,6 +97,11 @@ def initgraph(graph):
   graph.vs["numedges"] = numedges
 
 def minweightify(graph, minweight):
+  """
+  Usage: minweightify(graph, minweight) where initgraph(graph) has previously been called on the graph and where minweight
+  is between 0.50 and 1.00. Edges that have a similarity below minweight will be removed from the plot along with vertices
+  with no more visible edges.
+  """
   # White out edges that don't make the cut.
   edgeweights = graph.es["weight"]
   for edgeid, weight in enumerate(edgeweights):
@@ -106,6 +121,11 @@ def minweightify(graph, minweight):
   graph.vs["shape"] = shapes
   
 def makeplot(graph, minweight, graphlayout, filename='plots/senate_{}.png'):
+  """
+  This function is used to plot a graph with edges with a similarity below the minweight threshold removed along with 
+  vertices without any edges. The graphlayout parameter is used to ensure vertices stay in the same place each time this
+  function is called. The filename parameter is meant to be called with filename.format(...) to create the output filename.
+  """
   outfile = filename.format(str(int(100*minweight)).zfill(3))
   initgraph(graph)
   minweightify(graph, minweight)
