@@ -24,7 +24,7 @@ obtained by the different algorithms to the console.
 
 
 Dependencies:
-download_data.py
+download_data.py (located in this directory)
 igraph
 sys
 matplotlib.pyplot
