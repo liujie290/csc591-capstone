@@ -4,8 +4,8 @@ cluster.py:
 pyspark application to calculate the K medioids clustering of a graph
 <p>pyspark cluster.py &lt;input&gt; &lt;output&gt; &lt;K&gt; (&lt;iterations&gt;)<p>
 input: the input graph of the form
-&lt;vertex_count&gt;
-&lt;i&gt; &lt;name&gt;
+<br>&lt;vertex_count&gt;<br>
+<br>&lt;i&gt; &lt;name&gt;<br>
 &lt;u&gt; &lt;v&gt; &lt;d&gt;
 ...
 
