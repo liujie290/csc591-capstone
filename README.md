@@ -21,7 +21,7 @@ if an iteration count IS provided, we provide a histogram of how many times a co
 
 K: the number of clusters
 
-download_data.py
+download_data.py<br>
 downloads congress vote data<br>
 python download_data.py (house|senate) &lt;start&gt; &lt;end&gt; &lt;output&gt;
 
