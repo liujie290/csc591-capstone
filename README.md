@@ -2,19 +2,19 @@
 cluster.py:
 
 pyspark application to calculate the K medioids clustering of a graph
-pyspark cluster.py <input> <output> <K> (<iterations>)
+<p>pyspark cluster.py &lt;input&gt; &lt;output&gt; &lt;K&gt; (&lt;iterations&gt;)<p>
 input: the input graph. of the form
 &lt;vertex_count&gt;
 &lt;i&gt; &lt;name&gt;
 &lt;u&gt; &lt;v&gt; &lt;d&gt;
 ...
 
-the first <vertex_count> lines contain a vertex index and the associated name
-the remaining lines contain edges...with an edge of weight <d> between <u> and <v>
+the first &lt;vertex_count&gt; lines contain a vertex index and the associated name
+the remaining lines contain edges...with an edge of weight &lt;d&gt; between &lt;u&gt; and &lt;v&gt;
 unlisted edges are assumed to be infinite. All edges are bidirectional
 
 output: if an iteration count is not provided, we output the clusters
-&lt;medioid&gt; : &lt;member_1&gt; &lt;member_2&gt;...
+&lt;medioid&gt;: &lt;member_1&gt; &lt;member_2&gt;...
 
 if an iteration count IS provided, we provide a histogram of how many times a congressman was a medioid. Only those with non-zero values are listed.
 &lt;medioid&gt;: &lt;count&gt;
