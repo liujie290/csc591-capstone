@@ -76,8 +76,8 @@ python comparison.py &lt;house|senate&gt; &lt;starting_congress_number&gt; &lt;e
 This program also prints the number of communities and the modularity scores
 obtained by the different algorithms to the console.
 
-**Dependencies:**
-download_data.py (located in this directory)
-igraph
-sys
+**Dependencies:**<br>
+download_data.py (located in this directory)<br>
+igraph<br>
+sys<br>
 matplotlib.pyplot
