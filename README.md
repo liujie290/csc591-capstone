@@ -50,3 +50,35 @@ Example:
 ## word2vec ipython file
 
 This is a ipython notebook file containing work perform for bill corpus of text work. The data is in datafile.zip or the scraper can optionally used to load it. This will need to be unziped into a subfolder called data to properly work, or change paths in the notebook.
+
+## Comparison.py:
+
+Description:
+Imports the specified data based on the given starting and ending congress number.
+Runs the FastGreedy, Walktrap, and Leading Eigenvector community detection algorithms
+on the specified data and compares the resulting modularities between the different algorithms.
+
+Usage:
+python comparison.py &lt;house|senate&gt; &lt;starting_congress_number&gt; &lt;ending_congress_number&gt;
+
+Valid Congress Session Numbers:
+1 - 113 (I used Senate sessions 100 - 113 to complement the results obtained by cluster_igraph.py)
+
+Check for output in:
+Leading Eigenvector Senate Clusters folder: the clusters produced by the Leading Eigenvector
+algorithm on Senate sessions 100 - 113
+
+Walktrap Senate Clusters folder: the clusters produced by the Walktrap algorithm on Senate sessions 100 - 113
+
+(FastGreedy graph results already produced by cluster_igraph.py)
+
+comparison.png - A plot of the modularities produced for each outputed graph by the different algorithms. 
+
+This program also prints the number of communities and the modularity scores
+obtained by the different algorithms to the console.
+
+Dependencies:
+download_data.py (located in this directory)
+igraph
+sys
+matplotlib.pyplot
