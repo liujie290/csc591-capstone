@@ -21,8 +21,8 @@ i name
 u v d
 ```
 
-the first &lt;vertex_count&gt; lines contain a vertex index and the associated name
-the remaining lines contain edges...with an edge of weight &lt;d&gt; between &lt;u&gt; and &lt;v&gt;
+the first &lt;vertex_count&gt; lines contain a vertex index and the associated name<br>
+the remaining lines contain edges...with an edge of weight &lt;d&gt; between vertices &lt;u&gt; and &lt;v&gt;<br>
 unlisted edges are assumed to be infinite. All edges are bidirectional
 
 output: if an iteration count is not provided, we output the clusters
