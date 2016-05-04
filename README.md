@@ -64,8 +64,8 @@ python comparison.py &lt;house|senate&gt; &lt;starting_congress_number&gt; &lt;e
 Valid Congress Session Numbers:
 1 - 113 (I used Senate sessions 100 - 113 to complement the results obtained by cluster_igraph.py)
 
-Check for output in:
-Leading Eigenvector Senate Clusters folder: the clusters produced by the Leading Eigenvector
+Check for output in:<<br>
+Leading Eigenvector Senate Clusters folder: the clusters produced by the Leading Eigenvector<br>
 algorithm on Senate sessions 100 - 113
 
 Walktrap Senate Clusters folder: the clusters produced by the Walktrap algorithm on Senate sessions 100 - 113
