@@ -62,7 +62,7 @@ on the specified data and compares the resulting modularities between the differ
 python comparison.py &lt;house|senate&gt; &lt;starting_congress_number&gt; &lt;ending_congress_number&gt;<br>
 
 **Valid Congress Session Numbers:**<br>
-1 - 113 (I used Senate sessions 100 - 113 to complement the results obtained by cluster_igraph.py)<br>
+1 - 113 (I used Senates 100 - 113 to complement the results obtained by cluster_igraph.py)<br>
 (python comparison.py senate 100 113)
 
 **Check for output in:**<br>
