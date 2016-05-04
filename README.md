@@ -104,3 +104,39 @@ download_data.py (located in this directory)<br>
 igraph<br>
 sys<br>
 matplotlib.pyplot
+
+## Cluster iGraph
+
+Usage: ```python cluster_igraph.py (no params)```
+
+The module gets house and senate data for 101 - 113 (approx 1990 - 2014) and computes clusters
+using fast greedy modular optimization. The script compares modularity between the house vs senate,
+and produces plots for each house/senate for 101 - 113.
+
+## Visualization
+
+In order to do the first part of the analysis to create the data 
+ visualization, one can run the visualization_README as a bash script. 
+ 
+ The following files must be in the directory with this script:
+ ```
+   download_data.py - This file defines functions used to download the data.
+   savedata.py - This file downloads congress.pydata and saves it in 
+                 the current directory so one does not need to download
+                 the data for each run.
+   visualization.py - This file saves 101 plots in a subdirectory plots/ in
+                      the current directory. 
+                      NOTE: One can edit this file to change the loadgraph
+                      variable to True or False. If set to False, it will
+                      load congress.pydata, create a graph of the senate,
+                      and save it to allsenates.pydata. It will then run
+                      as usual. Subsequent runs can have loadgraph set to
+                      True, and the program will then load in the data from
+                      allsenates.pydata and then run as usual. 
+   makegif.sh - This file reduces files in plots/ to smaller *.png files 
+                for further processing. These files are saved in a 
+                subdirectory named smallerplots/ in the current directory.
+                It then creates a gif from these smaller plots and saves it
+                in the current directory as visualization.gif.
+                ```
+
