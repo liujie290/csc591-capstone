@@ -53,12 +53,12 @@ This is a ipython notebook file containing work perform for bill corpus of text 
 
 ## Comparison.py:
 
-**Description:**
+**Description:**<br>
 Imports the specified data based on the given starting and ending congress number.
 Runs the FastGreedy, Walktrap, and Leading Eigenvector community detection algorithms
 on the specified data and compares the resulting modularities between the different algorithms.
 
-**Usage:**
+**Usage:**<br>
 python comparison.py &lt;house|senate&gt; &lt;starting_congress_number&gt; &lt;ending_congress_number&gt;
 
 **Valid Congress Session Numbers:**<br>
@@ -71,7 +71,7 @@ python comparison.py &lt;house|senate&gt; &lt;starting_congress_number&gt; &lt;e
 
 (FastGreedy graph results already produced by cluster_igraph.py)
 
-comparison.png - A plot of the modularities produced for each outputed graph by the different algorithms. 
+**comparison.png** - A plot of the modularities produced for each outputed graph by the different algorithms. 
 
 This program also prints the number of communities and the modularity scores
 obtained by the different algorithms to the console.
