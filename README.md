@@ -48,8 +48,6 @@ python download_data.py (house|senate) &lt;start&gt; &lt;end&gt; &lt;output&gt;
 
 specify which house you want to download, the range of sessions you wish to include (inclusive), as well as the output file. Output is of the form above intended to be slurped by clusters.py
 
-
-
 ## Scraper
 
 ### Description
@@ -71,7 +69,7 @@ Example:
 
 ## word2vec ipython file
 
-This is a ipython notebook file containing work perform for bill corpus of text work. The data is in word2vec_datafile.zip or the scraper can optionally used to load it. This will need to be unziped into a subfolder called data to properly work, or change paths in the notebook.
+This is a ipython notebook file containing work perform for bill corpus of text work. The data is in word2vec_datafile.zip or the scraper can optionally used to load it. This will need to be unziped into a subfolder called data to properly work, or change paths in the notebook. The structure after unzipping should be like this in data folder, "data/109/*", "data/110/*", etc.
 
 ## Comparison.py:
 
